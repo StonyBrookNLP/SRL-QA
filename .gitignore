@@ -5,4 +5,8 @@ nbactions.xml
 nb-configuration.xml
 .nb-gradle/
 data/
+<<<<<<< HEAD
+=======
+dist/
+>>>>>>> 
 stanford-parser-full-2015-01-30/

@@ -67,6 +67,19 @@ public class StringUtil {
         return results;
     }
     
+
+    public static String getTokensWithSeparator(ArrayList<String> arr, String separator)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (String s : arr)
+        {
+            sb.append(s.trim());
+            sb.append("|");
+        }
+        String str = sb.toString();
+        return str.substring(0,str.length()-1);
+    }
+
     public static void main(String[] args)
     {
         System.out.println(Arrays.toString(getTokenAsArr("absorption | absorp", "\\|")));

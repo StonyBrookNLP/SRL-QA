@@ -1,5 +1,7 @@
 package qa.distantsupervision;
 
+import Util.ProcessFrameUtil;
+
 import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -21,6 +23,10 @@ public class DistantSupervisionLabeler {
     private ProcessFrameProcessor proc; // To load all the data from process frame data
     private String processFrameFilename;  // Process frame fileName
     private String corpusFile;    // Target corpus as the source for distant supervision
+
+
+    private String newAnnotatedFrameFileName;
+
     private ArrayList<String> triggers;
     private ArrayList<String> enablers;
     private ArrayList<String> undergoers;
@@ -31,9 +37,12 @@ public class DistantSupervisionLabeler {
     private String targetProcessName ="";
             
     // Constructor
-    public DistantSupervisionLabeler(String processFrameFilename, String corpusFile) {
+
+    public DistantSupervisionLabeler(String processFrameFilename, String corpusFile, String newAnnotatedFileName) {
         this.processFrameFilename = processFrameFilename;
         this.corpusFile = corpusFile;
+        this.newAnnotatedFrameFileName = newAnnotatedFileName;
+
     }
 
     // Initialize
@@ -76,11 +85,10 @@ public class DistantSupervisionLabeler {
         return docProcessor.getSentences(docStr.toString());
     }
 
-    
 
     public void annotateSentence() throws FileNotFoundException {
         ArrayList<String> sentences = getSentencesFromCorpus();
-        
+        ArrayList<ProcessFrame> newAnnotatedFrames = new ArrayList<ProcessFrame>();
         int cnt = 0;
         for (String sentence : sentences) {
             // If the sentence is related to the target process then check for occurrence of the role fillers
@@ -101,15 +109,23 @@ public class DistantSupervisionLabeler {
                     if (!matchesEnabler.isEmpty()) {
                         System.out.println("ENABLERS :" + matchesEnabler);
                     }
+
+                    ProcessFrame frame = ProcessFrameUtil.createProcessFrame(targetProcessName, matchesUndergoer, matchesEnabler, matchesTrigger, matchesResult, sentence);
+                    newAnnotatedFrames.add(frame);
+
                     cnt++;
                 }
             }
         }
         System.out.println(cnt);
+
     }
 
+
+    
     public static void main(String[] args) throws FileNotFoundException {
-        DistantSupervisionLabeler labeler = new DistantSupervisionLabeler("./data/all_process_frame.tsv", "./data/evaporation.txt");
+        DistantSupervisionLabeler labeler = new DistantSupervisionLabeler("./data/all_process_frame.tsv", "./data/evaporation.txt","./data/newAnnotated.txt");
+
         labeler.init();
         labeler.loadRoleFillers("evaporation");
         labeler.annotateSentence();
