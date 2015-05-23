@@ -67,6 +67,49 @@ public class StringUtil {
         return results;
     }
     
+    public static boolean isCapitalWord(String word)
+    {
+        for (int i = 0; i < word.length(); i++)
+        {
+            if (!Character.isUpperCase(word.charAt(i)))
+                return false;
+        }
+        
+        return true;
+    }
+    
+    public static boolean isValidSentence(String sent, List<String> tokens)
+    {
+        int cnt = 0;
+        for (int i = 0; i < sent.length(); i++)
+        {
+            if (sent.charAt(i) == '.')
+                cnt++;
+        }
+        if (cnt >  1 || cnt == 0)
+            return false;
+        
+        if (sent.contains("?") || sent.contains("_") || sent.contains("<")|| sent.toLowerCase().contains("condensation")
+            || sent.toLowerCase().contains("melting") || sent.toLowerCase().contains("freezing"))
+            return false;
+        
+        if (sent.length() > 135)
+            return false;
+        if (sent.length() < 20)
+            return false;
+        int cntNom = 0;
+        for (String token : tokens)
+        {
+            if (isCapitalWord(token))
+                return false;
+            if (token.endsWith("tion"))
+                cntNom++;
+            if (cntNom > 1)
+                return false;
+        }
+        return true;
+    }
+
 
     public static String getTokensWithSeparator(ArrayList<String> arr, String separator)
     {

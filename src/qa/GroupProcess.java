@@ -1,4 +1,4 @@
-/*
+ /*
  * To change this license header, choose License Headers in Project Properties.
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
@@ -62,6 +62,6 @@ public class GroupProcess {
         GroupProcess gp = new GroupProcess();
         // TO USE
         // Specify the file name which contains ALL frames and the directory where do you want to store the output files
-        gp.generateIndividualProcessesFile("./data/all_process_frame.tsv", "./data/processes/");
+        gp.generateIndividualProcessesFile("./data/all_process_may_18.tsv", "./data/processes_18_may/");
     }
 }

@@ -142,31 +142,31 @@ public class SRLTrainOnOverallProcess {
         return processNameNbFold;
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
+    public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
         SRLTrainOnOverallProcess p = new SRLTrainOnOverallProcess();
         // TEST ON NB FOLD PER PROCESS
-        HashMap<String, Integer> procFold = p.collectProcessFoldInfo("./data/processes");
+        HashMap<String, Integer> procFold = p.collectProcessFoldInfo("./data/processes_18_may");
 
         // TEST ON COLLECTING THE TRAINING INSTANCES CREATE APPROPRIATE TRAINING DATA
-        ArrayList<FoldInstance> instances = p.loadAllCrossValidationTrainingData("./data/processes");
+        ArrayList<FoldInstance> instances = p.loadAllCrossValidationTrainingData("./data/processes_18_may");
 
         // CREATE TRAINING DATA
         for (String process : procFold.keySet()) {
             for (int fold = 0; fold < procFold.get(process); fold++) {
                 System.out.println("CREATE TRAINING DATA FOR THIS FOLD");
-                p.createTrainingData("./data/processes/", process, fold, instances);
+                p.createTrainingData("./data/processes_18_may", process, fold, instances);
             }
         }
         // TRAIN, PREDICT, EVAL for each fold cross validation part
         int cnt = 0;
-        try (PrintWriter resultWriter = new PrintWriter(new File("./data/processes/jointModelResults.txt"))) {
+        try (PrintWriter resultWriter = new PrintWriter(new File("./data/processes_18_may/jointModelResults.txt"))) {
             for (String process : procFold.keySet()) {
                 for (int fold = 0; fold < procFold.get(process); fold++) {
-                    System.out.println(cnt + " " + process+" "+fold);
-                    String modelName = "./data/processes" + "/" + process + ".jointmodel." + fold;
-                    String trainingFileName = "./data/processes" + "/" + process + ".jointtrain.cv." + fold;
-                    String testingFileName = "./data/processes" + "/" + process + ".test.cv." + fold;
-                    String predictionFileName = "./data/processes" + "/" + process + ".jointpredict.cv" + fold;
+                    System.out.println(cnt + " " + process + " " + fold);
+                    String modelName = "./data/processes_18_may" + "/" + process + ".jointmodel." + fold;
+                    String trainingFileName = "./data/processes_18_may" + "/" + process + ".jointtrain.cv." + fold;
+                    String testingFileName = "./data/processes_18_may" + "/" + process + ".test.cv." + fold;
+                    String predictionFileName = "./data/processes_18_may" + "/" + process + ".jointpredict.cv" + fold;
 
                     System.out.println("TRAIN");
                     ClearParserUtil.clearParserTrain(modelName, trainingFileName); // TRAIN

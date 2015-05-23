@@ -5,6 +5,8 @@
  */
 package Util;
 
+import java.util.ArrayList;
+
 /**
  *
  * @author samuellouvan
@@ -26,4 +28,13 @@ public class ArrUtil {
         return idxMax;
     }
     
+    public static boolean isExistIntersect(ArrayList<String> str1, String[] str2)
+    {
+        for (String str : str2)
+        {
+            if (str1.contains(str))
+                return true;
+        }
+        return false;
+    }
 }

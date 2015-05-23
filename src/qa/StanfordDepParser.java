@@ -8,26 +8,37 @@ package qa;
 import edu.stanford.nlp.ling.CoreAnnotations;
 import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.pipeline.Annotation;
+import edu.stanford.nlp.pipeline.CoNLLOutputter;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
+import edu.stanford.nlp.semgraph.SemanticGraph;
+import edu.stanford.nlp.semgraph.SemanticGraphCoreAnnotations;
+import edu.stanford.nlp.trees.GrammaticalStructure;
+import edu.stanford.nlp.trees.TypedDependency;
 import edu.stanford.nlp.util.CoreMap;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import qa.dep.DependencyTree;
+import qa.util.FileUtil;
 
 /**
  *
  * @author samuellouvan
  */
-public class StanfordTokenizer {
+public class StanfordDepParser {
+   protected StanfordCoreNLP pipeline;
 
-    protected StanfordCoreNLP pipeline;
-
-    public StanfordTokenizer() {
+    public StanfordDepParser() {
         // Create StanfordCoreNLP object properties, with POS tagging
         // (required for lemmatization), and lemmatization
         Properties props;
         props = new Properties();
-        props.put("annotators", "tokenize, ssplit, pos, lemma");
+        props.put("annotators", "tokenize,ssplit,pos,lemma,depparse");
 
         /*
          * This is a pipeline that takes in a string and returns various analyzed linguistic forms. 
@@ -47,28 +58,28 @@ public class StanfordTokenizer {
         this.pipeline = new StanfordCoreNLP(props);
     }
 
-    public List<String> tokenize(String documentText) {
-        List<String> tokens = new LinkedList<String>();
+    public DependencyTree parse(String documentText) throws IOException
+    {
         // Create an empty Annotation just with the given text
         Annotation document = new Annotation(documentText);
         // run all Annotators on this text
         this.pipeline.annotate(document);
         // Iterate over all of the sentences found
-        List<CoreMap> sentences = document.get(CoreAnnotations.SentencesAnnotation.class);
-        for (CoreMap sentence : sentences) {
-            // Iterate over all tokens in a sentence
-            for (CoreLabel token : sentence.get(CoreAnnotations.TokensAnnotation.class)) {
-                // Retrieve and add the lemma for each word into the
-                // list of lemmas
-                tokens.add(token.originalText());
-            }
-        }
-        return tokens;
-    }
+        SemanticGraph ccProcessed  = document.get(CoreAnnotations.SentencesAnnotation.class).get(0)
+                                        .get(
+                                            SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
+        
+        Collection<TypedDependency> dependencies = ccProcessed.typedDependencies();
+        CoNLLOutputter.conllPrint(document, new FileOutputStream(new File("temp.dep")));
+        String conllString = FileUtil.readCoNLLFormat("temp.dep");
+        DependencyTree tree = DependencyTree.fromCoNLLFormatString(conllString);
+        return tree;
+    } 
     
-    public static void main(String[] args)
+    public static void main(String[] args) throws IOException
     {
-        StanfordTokenizer tokenizer = new StanfordTokenizer();
-        System.out.println(tokenizer.tokenize("I am your only hope."));
+        StanfordDepParser parser = new StanfordDepParser();
+        DependencyTree tree = parser.parse("Clouds get their water from evaporation.");
+        System.out.println(tree.toString());
     }
 }

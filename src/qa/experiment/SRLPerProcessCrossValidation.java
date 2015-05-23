@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package qa.experiment;
 
 import Util.ClearParserUtil;
@@ -64,14 +59,14 @@ public class SRLPerProcessCrossValidation {
         if (fileName.equals("")) {
             File folder = new File(dirName);
             File[] listOfFiles = folder.listFiles();
-
+            System.out.println("Hai");
             for (int i = 0; i < listOfFiles.length; i++) {
                 if (listOfFiles[i].getName().contains(".clearparser")) {
                     ArrayList<String> sentences = cp.loadSentences(dirName, listOfFiles[i].getName());
                     String processName = FileUtil.getFileNameWoExt(listOfFiles[i].getName());
                     processName = processName.replaceAll("\\|", "_");
                     processes.put(processName, sentences.size());
-                    //generateNFoldFiles(dirName, listOfFiles[i].getName(), sentences);
+                    generateNFoldFiles(dirName, listOfFiles[i].getName(), sentences);
                 }
             }
         } else {
@@ -86,6 +81,7 @@ public class SRLPerProcessCrossValidation {
             int fold = processes.get(processName);
             for (int i = 0; i < fold; i++) {
                 if (fold > 1) {
+                    System.out.println(i);
                     String s = "";
                     String modelName = dirName + "/" + processName + ".model." + i;
                     String trainingFileName = dirName + "/" + processName + ".train.cv." + i;
@@ -96,9 +92,9 @@ public class SRLPerProcessCrossValidation {
                     // System.out.println(trainingFileName);
 
                     /* Train a fold */
-                    //ClearParserUtil.clearParserTrain(modelName, trainingFileName);
-                    //ClearParserUtil.clearParserPredict(modelName, testingFileName, predictionFileName);
-                    String results = ClearParserUtil.clearParserEval(processName, fold, testingFileName, predictionFileName);
+                    ClearParserUtil.clearParserTrain(modelName, trainingFileName);
+                    ClearParserUtil.clearParserPredict(modelName, testingFileName, predictionFileName);
+                    String results = ClearParserUtil.clearParserEval(processName, i, testingFileName, predictionFileName);
                     resultWriter.print(results);
                     resultWriter.flush();
 
@@ -109,11 +105,11 @@ public class SRLPerProcessCrossValidation {
             cnt++;
         }
         //resultWriter.close();
-
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
         SRLPerProcessCrossValidation experiment = new SRLPerProcessCrossValidation();
-        experiment.experimentNFoldCrossVal("./data/processes", "", "./data/processes/results.tsv");
+        experiment.experimentNFoldCrossVal("/Users/samuellouvan/NetBeansProjects/QA/data/conduction_manual_cv", "",
+                                           "/Users/samuellouvan/NetBeansProjects/QA/data/conduction_manual_cv/results.tsv");
     }
 }

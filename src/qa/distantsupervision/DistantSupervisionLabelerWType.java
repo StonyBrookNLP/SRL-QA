@@ -15,13 +15,15 @@ import qa.StanfordDepParser;
 import qa.StanfordDocumentProcessor;
 import qa.StanfordLemmatizer;
 import qa.StanfordTokenizer;
+import qa.WordNet;
+import qa.dep.DependencyNode;
 import qa.dep.DependencyTree;
 
 /**
  *
  * @author samuellouvan
  */
-public class DistantSupervisionLabeler {
+public class DistantSupervisionLabelerWType {
 
     private ProcessFrameProcessor proc; // To load all the data from process frame data
     private String processFrameFilename;  // Process frame fileName
@@ -37,9 +39,10 @@ public class DistantSupervisionLabeler {
     private StanfordTokenizer tokenizer;
     private String targetProcessName = "";
     private StanfordDepParser depParser;
+    private WordNet wn;
     // Constructor
 
-    public DistantSupervisionLabeler(String processFrameFilename, String corpusFile, String newAnnotatedFileName) {
+    public DistantSupervisionLabelerWType(String processFrameFilename, String corpusFile, String newAnnotatedFileName) {
         this.processFrameFilename = processFrameFilename;
         this.corpusFile = corpusFile;
         this.newAnnotatedFrameFileName = newAnnotatedFileName;
@@ -48,7 +51,7 @@ public class DistantSupervisionLabeler {
 
     // Initialize
     // Load the data from the process frame file
-    public void init() throws FileNotFoundException {
+    public void init() throws FileNotFoundException, IOException {
         proc = new ProcessFrameProcessor(this.processFrameFilename);
         proc.loadProcessData();
         relevantSentences = new ArrayList<String>();
@@ -59,6 +62,7 @@ public class DistantSupervisionLabeler {
         enablers = new ArrayList<String>();
         triggers = new ArrayList<String>();
         results = new ArrayList<String>();
+        wn = new WordNet();
     }
 
     // Load all role fillers
@@ -118,12 +122,18 @@ public class DistantSupervisionLabeler {
             DependencyTree depTree = depParser.parse(sentence);
             // If the sentence is related to the target process then check for occurrence of the role fillers
             ArrayList<String> matchesTrigger = StringUtil.getMatch(tokenizer.tokenize(sentence), triggers);
+            // get the node of the trigger
+            ArrayList<DependencyNode> triggerNodes = depTree.getNode(matchesTrigger);
+            // get the type of undergoer, get the type of enabler, get the type of results
+            // 
+            String[] undergoerTypes = {"fluid"};
+            String[] resultTypes    = {"gas", "vapor"};
+            String[] enablerTypes   = {"energy","physical_property"};
             
-            
-            if (!matchesTrigger.isEmpty() && sentence.length() <= SENT_LENGTH) {
-                ArrayList<String> matchesUndergoer = StringUtil.getMatch(tokenizer.tokenize(sentence), undergoers);
-                ArrayList<String> matchesEnabler = StringUtil.getMatch(tokenizer.tokenize(sentence), enablers);
-                ArrayList<String> matchesResult = StringUtil.getMatch(tokenizer.tokenize(sentence), results);
+            if (!matchesTrigger.isEmpty() && (matchesTrigger.contains("evaporates") || matchesTrigger.contains("evaporation") || matchesTrigger.contains("evaporate")) && sentence.length() <= SENT_LENGTH) {
+                ArrayList<String> matchesUndergoer = depTree.getWordMatchType(triggerNodes, undergoerTypes, wn);
+                ArrayList<String> matchesEnabler = depTree.getWordMatchType(triggerNodes, enablerTypes, wn);
+                ArrayList<String> matchesResult = depTree.getWordMatchType(triggerNodes, resultTypes, wn);
                 boolean validUndergoer = PatternChecker.isValidArgument(matchesUndergoer, matchesTrigger, depTree);
                 boolean validEnabler = PatternChecker.isValidArgument(matchesEnabler, matchesTrigger, depTree);
                 boolean validResult = PatternChecker.isValidArgument(matchesResult, matchesTrigger, depTree);
@@ -156,11 +166,9 @@ public class DistantSupervisionLabeler {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        DistantSupervisionLabeler labeler = new DistantSupervisionLabeler("./data/all_process_may_18.tsv", 
-                "./data/distant_supervision_other_processes/refract_out.txt", 
-                "./data/distant_supervision_other_processes/refract_ds.tsv");
+        DistantSupervisionLabelerWType labeler = new DistantSupervisionLabelerWType("./data/all_process_frame.tsv", "./data/evaporation_trigger_larger.txt", "./data/evaporation_trigger_larger.tsv");
         labeler.init();
-        labeler.loadRoleFillers("refract");
+        labeler.loadRoleFillers("evaporation");
         labeler.annotateSentence();
     }
 }

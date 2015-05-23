@@ -50,8 +50,9 @@ public class ProcessFrameProcessor {
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             //System.out.println(cnt);
-            //System.out.println(line);
+            System.out.println(line);
             String[] columns = line.split("\t");
+            System.out.println(columns.length);
             ProcessFrame procFrame = new ProcessFrame();
             List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
             procFrame.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
@@ -142,6 +143,11 @@ public class ProcessFrameProcessor {
         return matchIdx;
     }
 
+    //TODO : add validity checking of the process frame file
+    /*public boolean isValidData()
+    {
+        
+    }*/
     public String getUndergoer(int sentenceCnt) {
         return procArr.get(sentenceCnt).getUnderGoer();
     }
@@ -201,7 +207,8 @@ public class ProcessFrameProcessor {
     }
     
     public static void main(String[] args) throws FileNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/micro_process_frame.txt");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/all_process_frame_may_2015.tsv");
+        proc.loadProcessData();
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

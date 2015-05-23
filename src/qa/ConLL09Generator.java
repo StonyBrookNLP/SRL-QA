@@ -5,6 +5,7 @@
  */
 package qa;
 
+import Util.StdUtil;
 import edu.stanford.nlp.io.EncodingPrintWriter;
 import java.io.BufferedReader;
 import java.io.File;
@@ -268,7 +269,7 @@ public class ConLL09Generator {
             String line = scanner.nextLine();
             if (line.isEmpty()) {
                 System.out.println(sentenceCnt);
-                //System.out.println(tokenProperties);
+                System.out.println(tokenProperties);
                 processSentence(tokenProperties, sentenceCnt);
                 conll09Writer.println(getString(tokenProperties));
                 ArrayList<String> clearParserTokenFields = getClearParserSRLFormat(tokenProperties, sentenceCnt);
@@ -313,6 +314,7 @@ public class ConLL09Generator {
 
         //BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
         //BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
+        StdUtil.printError(p);
         p.waitFor();
         // read the output from the command
         //System.out.println("Here is the standard output of the command:\n");
@@ -332,7 +334,7 @@ public class ConLL09Generator {
         File[] listOfFiles = folder.listFiles();
 
         for (int i = 0; i < listOfFiles.length; i++) {
-            if (listOfFiles[i].isFile()) {
+            if (listOfFiles[i].isFile() && listOfFiles[i].getName().contains(".tsv")) {
                 System.out.println("File " + listOfFiles[i].getName());
                 generateSentenceFile(dirName + "/" + listOfFiles[i].getName(), dirName + "/" + FileUtil.getFileNameWoExt(listOfFiles[i].getName()) + ".sent");
             }
@@ -389,13 +391,55 @@ public class ConLL09Generator {
 
     public static void main(String[] args) throws FileNotFoundException, IOException, InterruptedException {
         //Scanner scanner = new Scanner(new File("conll06.txt"));
-        ConLL09Generator gen = new ConLL09Generator("./data/all_question_frame.txt", "./data/all_question_frame_conll06.txt");
+        ConLL09Generator gen = new ConLL09Generator("./data/all_question_frame.txt", "./data/processes_may/riding.conll06");
         //gen.generateSentenceFile("./data/processes/write.tsv", "./data/processes/write.sent");
         //gen.doStanfordPipeline("./data/testsp/test_processes.sent", "./data/testsp/test_processes.tree", "./data/testsp/test_processes.conll06");
-        //gen.generateCONLLFileFromDir("./data/testsp");
+        //gen.generateCONLLFileFromDir("./data/evaporation_ds_234_larger_trigger");
         //gen.reformatToCONLL09("out_question_frame_conll09.txt");
-        //gen.generateSentenceFilesFromDir("./data/testsp");
-        gen.generateClearParserFilesFromDir("./data/testsp");
-        
+        //gen.generateSentenceFilesFromDir("./data/processes_may");
+        //gen.generateClearParserFilesFromDir("./data/evaporation_ds_234_larger_trigger");
+        //gen.generateClearParserFileFromFile("/Users/samuellouvan/NetBeansProjects/QA/data/processes_may/riding.tsv");
+        //gen.generateSentenceFile("/Users/samuellouvan/NetBeansProjects/QA/data/combined_all/all_process_may_18.tsv", "./data/combined_all/all_process_may_18.sent");
+        //gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/evaporation_ds_234_larger_trigger");
+
+       /* gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/absorb");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/absorb");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/absorb");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/blinking");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/blinking");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/blinking");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/breathe");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/breathe");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/breathe");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/chemosynthesis");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/chemosynthesis");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/chemosynthesis");*/
+
+        /*gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/friction");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/friction");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/friction");*/
+
+        /*gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/grow");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/grow");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/grow");*/
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/hibernate");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/hibernate");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/hibernate");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/meiosis");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/meiosis");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/meiosis");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/refract");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/refract");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/refract");
+
+        gen.generateSentenceFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/sublimation");
+        gen.generateCONLLFileFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/sublimation");
+        gen.generateClearParserFilesFromDir("/Users/samuellouvan/NetBeansProjects/QA/data/sublimation");
     }
 }

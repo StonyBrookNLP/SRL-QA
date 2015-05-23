@@ -67,9 +67,24 @@ public class FileUtil {
             writer.print(line);
         writer.close();
     }
+    public static String readCoNLLFormat(String fileName) throws FileNotFoundException
+    {
+        StringBuilder sb = new StringBuilder();
+        Scanner scanner = new Scanner(new File(fileName));
+        while (scanner.hasNextLine())
+        {
+            sb.append(scanner.nextLine()+"\n");
+        }
+        
+        return sb.toString().trim();
+    }
+    
     public static void main(String[] args) throws FileNotFoundException
     {
-        String[] lines = readLinesFromFile("./data/sp/process.tsv");
-        System.out.println(lines.length);
+        //String[] lines = readLinesFromFile("./data/sp/process.tsv");
+        //System.out.println(lines.length);
+        System.out.println(readCoNLLFormat("temp.dep"));
     }
+    
+    
 }
