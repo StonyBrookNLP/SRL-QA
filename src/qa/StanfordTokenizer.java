@@ -69,6 +69,6 @@ public class StanfordTokenizer {
     public static void main(String[] args)
     {
         StanfordTokenizer tokenizer = new StanfordTokenizer();
-        System.out.println(tokenizer.tokenize("I am your only hope."));
+        System.out.println(tokenizer.tokenize(" Cutting is the separation of a physical object, or a portion of a physical object, into two or more portions."));
     }
 }

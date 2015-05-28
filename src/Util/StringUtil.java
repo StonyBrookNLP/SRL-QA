@@ -33,12 +33,18 @@ public class StringUtil {
         
         return results;
     }
-    
+    public static boolean isHeader(String line) {
+        String fields[] = line.split("\t");
+        if (fields[0].equalsIgnoreCase("process") && fields[1].equalsIgnoreCase("undergoer")) {
+            return true;
+        }
+        return false;
+    }
     public static boolean contains(String str, String[] strArr)
     {
         for (String s : strArr)
         {
-            if(s.trim().equalsIgnoreCase(str))
+            if(s.trim().equalsIgnoreCase(str) || s.replaceAll("\\s+", "").equalsIgnoreCase(str))
                 return true;
         }
         

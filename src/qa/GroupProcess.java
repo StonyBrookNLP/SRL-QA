@@ -5,6 +5,7 @@
  */
 package qa;
 
+import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
@@ -22,9 +23,14 @@ public class GroupProcess {
         ArrayList<String> frames = new ArrayList<String>();
         int cnt = 0;
         while (scanner.hasNextLine()) {
+            
             String line = scanner.nextLine();
-            frames.add(line.trim());
-            cnt++;
+            if (!StringUtil.isHeader(line))
+            {
+                frames.add(line.trim());
+                cnt++;
+            }
+            
         }
 
         return frames;
@@ -35,6 +41,11 @@ public class GroupProcess {
      */
 
     public void generateIndividualProcessesFile(String masterFile, String outDir) throws FileNotFoundException {
+        File outDirF = new File(outDir);
+        if (!outDirF.exists() )
+        {
+            outDirF.mkdir();
+        }
         ArrayList<String> frames = readFrames(masterFile);
         String currentProcessName = frames.get(0).split("\t")[0]; // Get the name
         StringBuilder sb = new StringBuilder();
@@ -62,6 +73,6 @@ public class GroupProcess {
         GroupProcess gp = new GroupProcess();
         // TO USE
         // Specify the file name which contains ALL frames and the directory where do you want to store the output files
-        gp.generateIndividualProcessesFile("./data/all_process_may_18.tsv", "./data/processes_18_may/");
+        gp.generateIndividualProcessesFile("./data/all_processes_23_may_2015.tsv", "./data/processes_23_may_2015/");
     }
 }

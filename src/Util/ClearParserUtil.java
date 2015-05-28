@@ -73,65 +73,73 @@ public class ClearParserUtil {
     public static String toClearParserFormat(DependencyTree tree, ProcessFrame procFrame) {
         String results = "";
         // Get the trigger, undergoer, enabler, result idx from procFrame
+        procFrame.processRoleFillers();
         ArrayList<Integer> triggerIdx = procFrame.getTriggerIdx();
         ArrayList<Integer> undergoerIdx = procFrame.getUndergoerIdx();
         ArrayList<Integer> enablerIdx = procFrame.getEnablerIdx();
         ArrayList<Integer> resultIdx = procFrame.getResultIdx();
 
         String conLLRows[] = tree.toString().split("\n");
-        // Update trigger
-        for (Integer id : triggerIdx) {
-            String field[] = conLLRows[id - 1].split("\\s+");
-            field[7] = field[2] + ".01";
-            // update 
-            conLLRows[id] = String.join("\t", field);
+        if (triggerIdx.size() > 0) {
+            // Update trigger
+            for (Integer id : triggerIdx) {
+                String field[] = conLLRows[id - 1].split("\\s+");
+                field[7] = field[2] + ".01";
+                // update 
+                conLLRows[id - 1] = String.join("\t", field);
 
-        }
-
-        // Update undergoer
-        for (Integer id : undergoerIdx) {
-            String field[] = conLLRows[id - 1].split("\\s+");
-            String undergoerStr = "";
-
-            for (int i = 0; i < triggerIdx.size(); i++) {
-                undergoerStr += triggerIdx.get(i) + ":A0;";
             }
-            undergoerStr = undergoerStr.substring(0, undergoerStr.length() - 1);
 
-            field[8] = field[8] + undergoerStr;
-            field[8] = field[8].replaceAll("_", "");
-            conLLRows[id - 1] = String.join("\t", field);
-        }
+            // Update undergoer
+            for (Integer id : undergoerIdx) {
+                String field[] = conLLRows[id - 1].split("\\s+");
+                String undergoerStr = "";
 
-        // Update  enabler
-        for (Integer id : enablerIdx) {
-            String field[] = conLLRows[id - 1].split("\\s+");
-            String enablerStr = "";
+                for (int i = 0; i < triggerIdx.size(); i++) {
+                    undergoerStr += triggerIdx.get(i) + ":A0;";
+                }
+                undergoerStr = undergoerStr.substring(0, undergoerStr.length() - 1);
 
-            for (int i = 0; i < triggerIdx.size(); i++) {
-                enablerStr += triggerIdx.get(i) + ":A1;";
+                field[8] = field[8] + undergoerStr;
+                field[8] = field[8].replaceAll("_", "");
+                conLLRows[id - 1] = String.join("\t", field);
             }
-            enablerStr = enablerStr.substring(0, enablerStr.length() - 1);
-            field[8] = field[8] + enablerStr;
-            field[8]= field[8].replaceAll("_", "");
-            conLLRows[id - 1] = String.join("\t", field);
 
-        }
+            // Update  enabler
+            for (Integer id : enablerIdx) {
+                String field[] = conLLRows[id - 1].split("\\s+");
+                String enablerStr = "";
 
-        // Update  result
-        for (Integer id : resultIdx) {
-            String field[] = conLLRows[id - 1].split("\\s+");
-            String resultStr = "";
+                for (int i = 0; i < triggerIdx.size(); i++) {
+                    enablerStr += triggerIdx.get(i) + ":A1;";
+                }
+                enablerStr = enablerStr.substring(0, enablerStr.length() - 1);
+                field[8] = field[8] + enablerStr;
+                field[8] = field[8].replaceAll("_", "");
+                conLLRows[id - 1] = String.join("\t", field);
 
-            for (int i = 0; i < triggerIdx.size(); i++) {
-                resultStr += triggerIdx.get(i) + ":A2;";
             }
-            resultStr = resultStr.substring(0, resultStr.length() - 1);
-            field[8] = field[8] + resultStr;
-            field[8] = field[8].replaceAll("_", "");
-            conLLRows[id - 1] = String.join("\t", field);
 
+            // Update  result
+            for (Integer id : resultIdx) {
+                String field[] = conLLRows[id - 1].split("\\s+");
+                String resultStr = "";
+
+                for (int i = 0; i < triggerIdx.size(); i++) {
+                    resultStr += triggerIdx.get(i) + ":A2;";
+                }
+                resultStr = resultStr.substring(0, resultStr.length() - 1);
+                field[8] = field[8] + resultStr;
+                field[8] = field[8].replaceAll("_", "");
+                conLLRows[id - 1] = String.join("\t", field);
+
+            }
         }
+        for (int i = 0; i < conLLRows.length; i++) {
+            String fields[] = conLLRows[i].split("\\s+");
+            conLLRows[i] = String.join("\t", fields);
+        }
+
         return String.join("\n", conLLRows);
     }
 

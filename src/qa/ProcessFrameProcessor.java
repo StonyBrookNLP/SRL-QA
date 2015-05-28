@@ -5,6 +5,7 @@
  */
 package qa;
 
+import Util.ClearParserUtil;
 import Util.StringUtil;
 import java.io.FileReader;
 import java.io.IOException;
@@ -17,11 +18,12 @@ import edu.stanford.nlp.process.DocumentPreprocessor;
 import edu.stanford.nlp.process.PTBTokenizer;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Scanner;
-
-
+import qa.dep.DependencyTree;
 
 public class ProcessFrameProcessor {
 
@@ -36,11 +38,20 @@ public class ProcessFrameProcessor {
     static final int UNDERSPECIFIED_IDX = 5;
     static final int SENTENCE_IDX = 6;
     public static final String SEPARATOR = "\\|";
+    private HashMap<String, Integer> processCountPair = new HashMap<String, Integer>();
     
     public ProcessFrameProcessor(String fileName) {
         this.fileName = fileName;
         procArr = new ArrayList<ProcessFrame>();
         //slem = new StanfordLemmatizer();
+    }
+
+    public boolean isHeader(String line) {
+        String fields[] = line.split("\t");
+        if (fields[0].equalsIgnoreCase("process") && fields[1].equalsIgnoreCase("undergoer")) {
+            return true;
+        }
+        return false;
     }
 
     public void loadProcessData() throws FileNotFoundException {
@@ -49,24 +60,68 @@ public class ProcessFrameProcessor {
         int cnt = 0;
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
-            //System.out.println(cnt);
-            System.out.println(line);
-            String[] columns = line.split("\t");
-            System.out.println(columns.length);
-            ProcessFrame procFrame = new ProcessFrame();
-            List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
-            procFrame.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
-            procFrame.setProcessName(columns[PROCESS_NAME_IDX]);
-            procFrame.setUnderGoer(columns[UNDERGOER_IDX]);
-            procFrame.setEnabler(columns[ENABLER_IDX]);
-            procFrame.setTrigger(columns[TRIGGER_IDX]);
-            procFrame.setResult(columns[RESULT_IDX]);
-            procFrame.setUnderSpecified(columns[UNDERSPECIFIED_IDX]);
-            procFrame.setRawText(columns[SENTENCE_IDX].trim());
-            procArr.add(procFrame);
-            cnt++;
+            if (!isHeader(line)) {
+                //System.out.println(cnt);
+                //System.out.println(line);
+                String[] columns = line.split("\t");
+                System.out.println(columns.length);
+                ProcessFrame procFrame = new ProcessFrame();
+                List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
+                procFrame.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
+                procFrame.setProcessName(columns[PROCESS_NAME_IDX]);
+                procFrame.setUnderGoer(columns[UNDERGOER_IDX]);
+                procFrame.setEnabler(columns[ENABLER_IDX]);
+                procFrame.setTrigger(columns[TRIGGER_IDX]);
+                procFrame.setResult(columns[RESULT_IDX]);
+                procFrame.setUnderSpecified(columns[UNDERSPECIFIED_IDX]);
+                procFrame.setRawText(columns[SENTENCE_IDX].trim());
+                if (!processCountPair.containsKey(procFrame.getProcessName()))
+                {
+                    processCountPair.put(procFrame.getProcessName(), 1);
+                }
+                else
+                {
+                    processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
+                }
+
+                procArr.add(procFrame);
+                cnt++;
+            }
         }
         System.out.println("END OF LOAD SENTENCES");
+    }
+    
+    public int getDataCount(String processName)
+    {
+        return processCountPair.get(processName);
+    }
+    public void toClearParserFormat(String clearParserFileName) throws FileNotFoundException, IOException {
+
+        ArrayList<ProcessFrame> processFrames = getProcArr();
+        PrintWriter writer = new PrintWriter(clearParserFileName);
+        for (ProcessFrame p : processFrames) {
+            String rawText = p.getRawText();
+
+            rawText = rawText.replace(".", " ");
+            rawText = rawText.replaceAll("\"", "");
+            rawText = rawText.trim();
+            rawText += ".";
+
+            // update tokenized text here
+            List<String> tokenized = slem.tokenize(rawText);
+            p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
+
+            DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+            try {
+                String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
+                writer.println(conLLStr);
+                writer.println();
+            } catch (Exception e) {
+
+            }
+
+        }
+        writer.close();
     }
 
     public ProcessFrame getProcessFrame(int idx) {
@@ -84,18 +139,18 @@ public class ProcessFrameProcessor {
     public ArrayList<ProcessFrame> getProcArr() {
         return procArr;
     }
-    
-    public ArrayList<ProcessFrame> getProcessFrameByName(String processName)
-    {
+
+    public ArrayList<ProcessFrame> getProcessFrameByName(String processName) {
         ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
-        for (ProcessFrame p : this.getProcArr())
-        {
-            String[] name = StringUtil.getTokenAsArr(p.getProcessName(),SEPARATOR);
-            if (StringUtil.contains(processName, name))
+        for (ProcessFrame p : this.getProcArr()) {
+            String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
+            if (StringUtil.contains(processName, name) ) {
                 results.add(p);
+            }
         }
         return results;
     }
+
     public ArrayList<Integer> getIdxMatches(String[] targetPattern, String[] tokenizedSentence) {
         boolean inRegion = false;
         int matchStart = 0;
@@ -119,10 +174,9 @@ public class ProcessFrameProcessor {
         if (matchStart == matchEnd) {
             return idx;
         } else {
-            if (targetPattern[0].length() > 0)
-            {
+            if (targetPattern[0].length() > 0) {
                 System.out.println(Arrays.toString(tokenizedSentence));
-                System.out.println("ERROR : CANNOT FIND \""+Arrays.toString(targetPattern)+"\" IN THE SENTENCE");
+                System.out.println("ERROR : CANNOT FIND \"" + Arrays.toString(targetPattern) + "\" IN THE SENTENCE");
             }
             return null;
         }
@@ -132,22 +186,22 @@ public class ProcessFrameProcessor {
         String[] triggerItem = getTrigger(sentenceCnt).split("\\|");
         String[] tokenized = getTokenized(sentenceCnt);
         ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        for (int i = 0; i < triggerItem.length; i++)
-        {
+        for (int i = 0; i < triggerItem.length; i++) {
             List<String> ls = slem.tokenize(triggerItem[i].trim());
             String[] triggerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(triggerValues, tokenized) != null)
+            if (getIdxMatches(triggerValues, tokenized) != null) {
                 matchIdx.addAll(getIdxMatches(triggerValues, tokenized));
+            }
         }
-        
+
         return matchIdx;
     }
 
     //TODO : add validity checking of the process frame file
     /*public boolean isValidData()
-    {
+     {
         
-    }*/
+     }*/
     public String getUndergoer(int sentenceCnt) {
         return procArr.get(sentenceCnt).getUnderGoer();
     }
@@ -156,59 +210,61 @@ public class ProcessFrameProcessor {
         String[] undergoerItem = getUndergoer(sentenceCnt).split("\\|");
         String[] tokenized = getTokenized(sentenceCnt);
         ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        for (int i = 0; i < undergoerItem.length; i++)
-        {
+        for (int i = 0; i < undergoerItem.length; i++) {
             List<String> ls = slem.tokenize(undergoerItem[i].trim());
             String[] undergoerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(undergoerValues, tokenized) != null)
+            if (getIdxMatches(undergoerValues, tokenized) != null) {
                 matchIdx.addAll(getIdxMatches(undergoerValues, tokenized));
+            }
         }
-        
+
         return matchIdx;
     }
 
-    public String getEnabler(int sentenceCnt)
-    {
+    public String getEnabler(int sentenceCnt) {
         return procArr.get(sentenceCnt).getEnabler();
     }
+
     public ArrayList<Integer> getEnablerTokenIdx(int sentenceCnt) {
         String[] enablerItem = getEnabler(sentenceCnt).split("\\|");
         String[] tokenized = getTokenized(sentenceCnt);
         ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        for (int i = 0; i < enablerItem.length; i++)
-        {
+        for (int i = 0; i < enablerItem.length; i++) {
             List<String> ls = slem.tokenize(enablerItem[i].trim());
             String[] enablerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(enablerValues, tokenized) != null)
+            if (getIdxMatches(enablerValues, tokenized) != null) {
                 matchIdx.addAll(getIdxMatches(enablerValues, tokenized));
+            }
         }
-        
+
         return matchIdx;
     }
 
-    public String getResult(int sentenceCnt)
-    {
+    public String getResult(int sentenceCnt) {
         return procArr.get(sentenceCnt).getResult();
     }
-    
+
     public ArrayList<Integer> getResultTokenIdx(int sentenceCnt) {
         String[] resultItem = getResult(sentenceCnt).split("\\|");
         String[] tokenized = getTokenized(sentenceCnt);
         ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        for (int i = 0; i < resultItem.length; i++)
-        {
+        for (int i = 0; i < resultItem.length; i++) {
             List<String> ls = slem.tokenize(resultItem[i].trim());
             String[] resultValues = ls.toArray(new String[ls.size()]);; // TOKENIZED STANFORD
-            if (getIdxMatches(resultValues, tokenized) != null)
+            if (getIdxMatches(resultValues, tokenized) != null) {
                 matchIdx.addAll(getIdxMatches(resultValues, tokenized));
+            }
         }
-        
+
         return matchIdx;
     }
     
-    public static void main(String[] args) throws FileNotFoundException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/all_process_frame_may_2015.tsv");
+ 
+
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/processes_23_may_2015/revising.tsv");
         proc.loadProcessData();
+        proc.toClearParserFormat("./data/processes_23_may_2015/revising.clearparser");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

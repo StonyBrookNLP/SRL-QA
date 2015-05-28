@@ -7,6 +7,7 @@ package qa;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class ProcessFrame {
@@ -19,66 +20,96 @@ public class ProcessFrame {
     private String trigger;
     private String result;
     private String underSpecified;
+    private ArrayList<Integer> undergoerIndex = new ArrayList<Integer>();
+    private ArrayList<Integer> enablerIndex = new ArrayList<Integer>();
+    private ArrayList<Integer> triggerIndex = new ArrayList<Integer>();
+    private ArrayList<Integer> resultIndex = new ArrayList<Integer>();
 
     public ArrayList<Integer> getTriggerIdx() {
-        ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        String[] triggerItem = trigger.split("\\|");
-        String[] tokenized = tokenizedText;
-        for (int i = 0; i < triggerItem.length; i++) {
-            List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(triggerItem[i].trim());
-            String[] triggerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(triggerValues, tokenized) != null) {
-                matchIdx.addAll(getIdxMatches(triggerValues, tokenized));
+        /*ArrayList<Integer> matchIdx = new ArrayList<Integer>();
+         String[] triggerItem = trigger.split("\\|");
+         String[] tokenized = tokenizedText;
+         for (int i = 0; i < triggerItem.length; i++) {
+         List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(triggerItem[i].trim());
+         String[] triggerValues = ls.toArray(new String[ls.size()]);
+         if (getIdxMatches(triggerValues, tokenized) != null) {
+         matchIdx.addAll(getIdxMatches(triggerValues, tokenized));
+         }
+         }*/
+
+        return triggerIndex;
+    }
+
+    public void processRoleFillers() {
+        System.out.println("PROCESSING");
+        ArrayList<String> roleFillers = new ArrayList<String>();
+        String[] undergoers = underGoer.split("\\|");
+        String[] enablers = enabler.split("\\|");
+        String[] triggers = trigger.split("\\|");
+        String[] results = result.split("\\|");
+
+        ArrayList<Integer> allIdx = new ArrayList<Integer>();
+        for (String str : undergoers) {
+            if (str.trim().length() > 0) {
+                roleFillers.add(str.trim() + ":A0");
+            }
+        }
+        for (String str : enablers) {
+            if (str.trim().length() > 0) {
+                roleFillers.add(str.trim() + ":A1");
+            }
+        }
+        for (String str : triggers) {
+            if (str.trim().length() > 0) {
+                roleFillers.add(str.trim() + ":T");
+            }
+        }
+        for (String str : results) {
+            if (str.trim().length() > 0) {
+                roleFillers.add(str.trim() + ":A2");
             }
         }
 
-        return matchIdx;
-    }
-
-    public ArrayList<Integer> getEnablerIdx()
-    {
-        ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        String[] enablerItem= enabler.split("\\|");
-        String[] tokenized = tokenizedText;
-        for (int i = 0; i < enablerItem.length; i++) {
-            List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(enablerItem[i].trim());
-            String[] enablerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(enablerValues, tokenized) != null) {
-                matchIdx.addAll(getIdxMatches(enablerValues, tokenized));
+        Collections.sort(roleFillers, new MyComparator());
+        for (String roleFiller : roleFillers) {
+            List<String> tokens = StanfordTokenizerSingleton.getInstance().tokenize(roleFiller.split(":")[0]);
+            String[] pattern = new String[tokens.size()];
+            tokens.toArray(pattern);
+            ArrayList<Integer> matches = getIdxMatchesv2(pattern, tokenizedText, allIdx);
+            // Check type
+            String type = roleFiller.split(":")[1];
+            if (type.equalsIgnoreCase("A0")) {
+                undergoerIndex.addAll(matches);
             }
+            if (type.equalsIgnoreCase("A1")) {
+                enablerIndex.addAll(matches);
+            }
+            if (type.equalsIgnoreCase("T")) {
+                triggerIndex.addAll(matches);
+            }
+            if (type.equalsIgnoreCase("A2")) {
+                resultIndex.addAll(matches);
+            }
+            allIdx.addAll(matches);
         }
 
-        return matchIdx;
     }
-    
-    public ArrayList<Integer> getResultIdx()
-    {
-        ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        String[] resultItem= enabler.split("\\|");
-        String[] tokenized = tokenizedText;
-        for (int i = 0; i < resultItem.length; i++) {
-            List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(resultItem[i].trim());
-            String[] resultValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(resultValues, tokenized) != null) {
-                matchIdx.addAll(getIdxMatches(resultValues, tokenized));
-            }
-        }
 
-        return matchIdx;
+    public ArrayList<Integer> getEnablerIdx() {
+
+        return enablerIndex;
     }
+
+    public ArrayList<Integer> getResultIdx() {
+ 
+
+        return resultIndex;
+    }
+
     public ArrayList<Integer> getUndergoerIdx() {
-        ArrayList<Integer> matchIdx = new ArrayList<Integer>();
-        String[] undergoerItem = underGoer.split("\\|");
-        String[] tokenized = tokenizedText;
-        for (int i = 0; i < undergoerItem.length; i++) {
-            List<String> ls = StanfordTokenizerSingleton.getInstance().tokenize(undergoerItem[i].trim());
-            String[] undergoerValues = ls.toArray(new String[ls.size()]);
-            if (getIdxMatches(undergoerValues, tokenized) != null) {
-                matchIdx.addAll(getIdxMatches(undergoerValues, tokenized));
-            }
-        }
 
-        return matchIdx;
+
+        return undergoerIndex;
     }
 
     public String getRawText() {
@@ -145,6 +176,37 @@ public class ProcessFrame {
         this.tokenizedText = tokenizedText;
     }
 
+    public ArrayList<Integer> getIdxMatchesv2(String[] targetPattern, String[] tokenizedSentence, ArrayList<Integer> idxs) {
+        boolean inRegion = false;
+        int matchStart = 0;
+        int matchEnd = targetPattern.length;
+        ArrayList<Integer> idx = new ArrayList<Integer>();
+        for (int i = 0; i < tokenizedSentence.length && matchStart < matchEnd; i++) {
+            if (tokenizedSentence[i].equalsIgnoreCase(targetPattern[matchStart]) && !idxs.contains(i+1)) {
+                idx.add(i + 1); // because ConLL index starts from 1 
+                if (!inRegion) {
+                    inRegion = true;
+                }
+                matchStart++;
+            } else {
+                if (inRegion) {
+                    inRegion = false;
+                    idx.clear();
+                    matchStart--;
+                }
+            }
+        }
+        if (matchStart == matchEnd) {
+            return idx;
+        } else {
+            if (targetPattern[0].length() > 0) {
+                System.out.println(Arrays.toString(tokenizedSentence));
+                System.out.println("ERROR : CANNOT FIND \"" + Arrays.toString(targetPattern) + "\" IN THE SENTENCE");
+            }
+            return null;
+        }
+    }
+
     public ArrayList<Integer> getIdxMatches(String[] targetPattern, String[] tokenizedSentence) {
         boolean inRegion = false;
         int matchStart = 0;
@@ -175,5 +237,33 @@ public class ProcessFrame {
             return null;
         }
     }
+    
+    public String toString()
+    {
+        StringBuilder strB = new StringBuilder();
+        strB.append(processName+"\t");
+        strB.append(underGoer+"\t");
+        strB.append(enabler+"\t");
+        strB.append(trigger+"\t");
+        strB.append(result+"\t");
+        strB.append(underSpecified+"\t");
+        strB.append(rawText);
+        
+        return strB.toString();
+    }
 
+}
+class MyComparator implements java.util.Comparator<String> {
+
+
+
+
+    public int compare(String o1, String o2) {
+        if (o1.length() > o2.length())
+            return -1;
+        if (o1.length() == o2.length())
+            return 0;
+        return 1;
+        
+    }
 }

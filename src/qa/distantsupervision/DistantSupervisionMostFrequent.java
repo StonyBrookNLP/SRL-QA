@@ -1,7 +1,12 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package qa.distantsupervision;
 
+import Util.GlobalVariable;
 import Util.ProcessFrameUtil;
-
 import Util.StringUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -13,7 +18,6 @@ import qa.ProcessFrame;
 import qa.ProcessFrameProcessor;
 import qa.StanfordDepParser;
 import qa.StanfordDocumentProcessor;
-import qa.StanfordLemmatizer;
 import qa.StanfordTokenizer;
 import qa.dep.DependencyTree;
 
@@ -21,9 +25,8 @@ import qa.dep.DependencyTree;
  *
  * @author samuellouvan
  */
-public class DistantSupervisionLabeler {
+public class DistantSupervisionMostFrequent {
 
-    public static String[] BLACKLIST = {"or", "to", "in", "the", "into", "no", "and", "of", "a", "an", "it", "is", "on", "at", "its", "for"};
     private ProcessFrameProcessor proc; // To load all the data from process frame data
     private String processFrameFilename;  // Process frame fileName
     private String corpusFile;    // Target corpus as the source for distant supervision
@@ -40,7 +43,7 @@ public class DistantSupervisionLabeler {
     private StanfordDepParser depParser;
     // Constructor
 
-    public DistantSupervisionLabeler(String processFrameFilename, String corpusFile, String newAnnotatedFileName) {
+    public DistantSupervisionMostFrequent(String processFrameFilename, String corpusFile, String newAnnotatedFileName) {
         this.processFrameFilename = processFrameFilename;
         this.corpusFile = corpusFile;
         this.newAnnotatedFrameFileName = newAnnotatedFileName;
@@ -66,7 +69,6 @@ public class DistantSupervisionLabeler {
     public void loadRoleFillers(String processName) {
         System.out.println("START LOADING ROLE FILLERS");
         ArrayList<ProcessFrame> processFrames = proc.getProcessFrameByName(processName);
-        System.out.println(processName);
         targetProcessName = processFrames.get(0).getProcessName();
         for (ProcessFrame p : processFrames) {
             undergoers.addAll(StringUtil.getTokenAsList(p.getUnderGoer(), ProcessFrameProcessor.SEPARATOR));
@@ -163,11 +165,23 @@ public class DistantSupervisionLabeler {
     }
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        DistantSupervisionLabeler labeler = new DistantSupervisionLabeler("./data/all_process_may_18.tsv",
-                "./data/distant_supervision_other_processes/refract_out.txt",
-                "./data/distant_supervision_other_processes/refract_ds.tsv");
-        labeler.init();
-        labeler.loadRoleFillers("refract");
-        labeler.annotateSentence();
+
+        File dir = new File(GlobalVariable.PROJECT_DIR + "/data/ds_most_frequent");
+        File[] files = dir.listFiles();
+
+        for (int i = 0; i < files.length; i++) {
+            String fileName = files[i].getName();
+            String processName = fileName.substring(0, fileName.indexOf(".")).split("_")[0].toLowerCase();
+            if (fileName.contains("_out.txt")) {
+                System.out.println(processName.toLowerCase());
+                DistantSupervisionMostFrequent labeler = new DistantSupervisionMostFrequent("./data/most_frequent.tsv",
+                        "./data/ds_most_frequent/" + files[i].getName(),
+                        "./data/ds_most_frequent/" + fileName.substring(0, fileName.indexOf(".")) + "_ds.tsv");
+                labeler.init();
+                labeler.loadRoleFillers(processName);
+                labeler.annotateSentence();
+            }
+        }
+
     }
 }

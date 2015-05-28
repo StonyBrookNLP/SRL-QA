@@ -47,7 +47,7 @@ public class DependencyNode {
     /** Creates a dependency node from a single line in the CoNLL-X format. Lemma, feats, phead and pdeprel are ignored. */
     public static DependencyNode fromCoNLLFormatString(String conllFormatString) {
         String[] fields = conllFormatString.trim().split("(\\s|\\t)+");
-        System.out.println(Arrays.toString(fields));
+        //System.out.println(Arrays.toString(fields));
         return new DependencyNode(Integer.parseInt(fields[0]), fields[1],fields[2], fields[3], fields[4], Integer.parseInt(fields[5]), fields[6]);
     }
 

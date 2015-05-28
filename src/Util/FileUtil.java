@@ -19,7 +19,10 @@ import java.util.Scanner;
 public class FileUtil {
 
     public static String getFileNameWoExt(String fileNameWithExt) {
+        
         int dotIdx = fileNameWithExt.indexOf(".");
+        if (dotIdx == -1)
+            return fileNameWithExt;
         return fileNameWithExt.substring(0, dotIdx);
     }
 
@@ -35,56 +38,71 @@ public class FileUtil {
 
             @Override
             public boolean accept(File dir, String name) {
-                if (name.contains(filter))
+                if (name.contains(filter)) {
                     return true;
+                }
                 return false;
             }
         };
-        
+
         File folder = new File(dirName);
-        
+
         return folder.listFiles(fileNameFilter);
     }
-    
-    public static String[] readLinesFromFile(String fileName) throws FileNotFoundException
-    {
+
+    public static String[] readLinesFromFile(String fileName) throws FileNotFoundException {
         ArrayList<String> lines = new ArrayList<String>();
         Scanner scanner = new Scanner(new File(fileName));
-        
-        while (scanner.hasNextLine())
-        {
+
+        while (scanner.hasNextLine()) {
             String line = scanner.nextLine();
             lines.add(line);
         }
-        
+
         return lines.toArray(new String[lines.size()]);
     }
-    
-    public static void dumpToFile(ArrayList<String> text, String fileName ) throws FileNotFoundException
-    {
+
+    public static void dumpToFile(ArrayList<String> text, String fileName) throws FileNotFoundException {
         PrintWriter writer = new PrintWriter(fileName);
-        for (String line : text)
+        for (String line : text) {
             writer.print(line);
+        }
         writer.close();
     }
-    public static String readCoNLLFormat(String fileName) throws FileNotFoundException
-    {
-        StringBuilder sb = new StringBuilder();
-        Scanner scanner = new Scanner(new File(fileName));
-        while (scanner.hasNextLine())
-        {
-            sb.append(scanner.nextLine()+"\n");
+
+    public static void dumpToFile(ArrayList<String> text, String fileName, String sep) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        for (String line : text) {
+            writer.print(line+"\n");
         }
-        
-        return sb.toString().trim();
+        writer.close();
     }
     
-    public static void main(String[] args) throws FileNotFoundException
+    public static void dumpToFile(String text, String fileName) throws FileNotFoundException {
+        PrintWriter writer = new PrintWriter(fileName);
+        writer.println(text);
+        writer.close();
+    }
+
+    public static boolean mkDir(String dirName)
     {
+        File file = new File(dirName);
+        return file.mkdir();
+    }
+    public static String readCoNLLFormat(String fileName) throws FileNotFoundException {
+        StringBuilder sb = new StringBuilder();
+        Scanner scanner = new Scanner(new File(fileName));
+        while (scanner.hasNextLine()) {
+            sb.append(scanner.nextLine() + "\n");
+        }
+
+        return sb.toString().trim();
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
         //String[] lines = readLinesFromFile("./data/sp/process.tsv");
         //System.out.println(lines.length);
         System.out.println(readCoNLLFormat("temp.dep"));
     }
-    
-    
+
 }

@@ -17,7 +17,7 @@ import org.apache.commons.lang3.StringUtils;
 class Test {
 
 
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException, IOException {
         /*String str = "absorb |    samuel";
         String tokens[] = str.split("\\|");
         System.out.println(tokens.length);
@@ -34,7 +34,7 @@ class Test {
         //System.out.println(System.getProperty("java.class.path"));
         //System.out.println(StringUtils.getLevenshteinDistance("polluting", "pollution", 3));
         
-        StanfordLemmatizer slem = new StanfordLemmatizer();
+        /*StanfordLemmatizer slem = new StanfordLemmatizer();
         Scanner scanner = new Scanner(new File("./data/sp/testSetRandom.tsv"));
         PrintWriter writer = new PrintWriter("./data/sp/testSetRandomCleaned.tsv");
         while (scanner.hasNextLine())
@@ -46,6 +46,8 @@ class Test {
             String wrongUndergoer = slem.lemmatize(fields[2].trim()).get(0);
             writer.println(trigger+"\t"+correctUndergoer+"\t"+wrongUndergoer);
         }
-        writer.close();
+        writer.close();*/
+        File file = new File(".");
+        System.out.println(file.getCanonicalPath());
     }
 }
