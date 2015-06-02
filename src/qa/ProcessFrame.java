@@ -40,8 +40,16 @@ public class ProcessFrame {
         return triggerIndex;
     }
 
+    public void clearAllIndexes()
+    {
+        undergoerIndex.clear();
+        enablerIndex.clear();
+        resultIndex.clear();
+        triggerIndex.clear();
+    }
     public void processRoleFillers() {
-        System.out.println("PROCESSING");
+        //System.out.println("PROCESSING");
+        clearAllIndexes();
         ArrayList<String> roleFillers = new ArrayList<String>();
         String[] undergoers = underGoer.split("\\|");
         String[] enablers = enabler.split("\\|");

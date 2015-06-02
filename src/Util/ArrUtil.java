@@ -37,4 +37,15 @@ public class ArrUtil {
         }
         return false;
     }
+    
+    public static boolean isIntersect(ArrayList<Integer> arr1, ArrayList<Integer> arr2)
+    {
+        for (Integer i : arr1)
+        {
+            if (arr2.contains(i))
+                return true;
+        }
+        
+        return false;
+    }
 }

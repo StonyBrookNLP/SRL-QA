@@ -39,7 +39,7 @@ public class ProcessFrameProcessor {
     static final int SENTENCE_IDX = 6;
     public static final String SEPARATOR = "\\|";
     private HashMap<String, Integer> processCountPair = new HashMap<String, Integer>();
-    
+
     public ProcessFrameProcessor(String fileName) {
         this.fileName = fileName;
         procArr = new ArrayList<ProcessFrame>();
@@ -64,7 +64,6 @@ public class ProcessFrameProcessor {
                 //System.out.println(cnt);
                 //System.out.println(line);
                 String[] columns = line.split("\t");
-                System.out.println(columns.length);
                 ProcessFrame procFrame = new ProcessFrame();
                 List<String> tokenized = slem.tokenize(columns[SENTENCE_IDX].trim());
                 procFrame.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
@@ -75,12 +74,9 @@ public class ProcessFrameProcessor {
                 procFrame.setResult(columns[RESULT_IDX]);
                 procFrame.setUnderSpecified(columns[UNDERSPECIFIED_IDX]);
                 procFrame.setRawText(columns[SENTENCE_IDX].trim());
-                if (!processCountPair.containsKey(procFrame.getProcessName()))
-                {
+                if (!processCountPair.containsKey(procFrame.getProcessName())) {
                     processCountPair.put(procFrame.getProcessName(), 1);
-                }
-                else
-                {
+                } else {
                     processCountPair.put(procFrame.getProcessName(), processCountPair.get(procFrame.getProcessName().trim()) + 1);
                 }
 
@@ -90,11 +86,11 @@ public class ProcessFrameProcessor {
         }
         System.out.println("END OF LOAD SENTENCES");
     }
-    
-    public int getDataCount(String processName)
-    {
+
+    public int getDataCount(String processName) {
         return processCountPair.get(processName);
     }
+
     public void toClearParserFormat(String clearParserFileName) throws FileNotFoundException, IOException {
 
         ArrayList<ProcessFrame> processFrames = getProcArr();
@@ -110,9 +106,9 @@ public class ProcessFrameProcessor {
             // update tokenized text here
             List<String> tokenized = slem.tokenize(rawText);
             p.setTokenizedText(tokenized.toArray(new String[tokenized.size()]));
-
-            DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
             try {
+                DependencyTree tree = StanfordDepParserSingleton.getInstance().parse(rawText);
+
                 String conLLStr = ClearParserUtil.toClearParserFormat(tree, p);
                 writer.println(conLLStr);
                 writer.println();
@@ -144,7 +140,7 @@ public class ProcessFrameProcessor {
         ArrayList<ProcessFrame> results = new ArrayList<ProcessFrame>();
         for (ProcessFrame p : this.getProcArr()) {
             String[] name = StringUtil.getTokenAsArr(p.getProcessName(), SEPARATOR);
-            if (StringUtil.contains(processName, name) ) {
+            if (StringUtil.contains(processName, name)) {
                 results.add(p);
             }
         }
@@ -258,13 +254,11 @@ public class ProcessFrameProcessor {
 
         return matchIdx;
     }
-    
- 
 
     public static void main(String[] args) throws FileNotFoundException, IOException {
-        ProcessFrameProcessor proc = new ProcessFrameProcessor("./data/processes_23_may_2015/revising.tsv");
+        ProcessFrameProcessor proc = new ProcessFrameProcessor("/Users/samuellouvan/NetBeansProjects/QA/data/sandbox/ds_combined.tsv");
         proc.loadProcessData();
-        proc.toClearParserFormat("./data/processes_23_may_2015/revising.clearparser");
+        proc.toClearParserFormat("/Users/samuellouvan/NetBeansProjects/QA/data/sandbox/ds_combined.clearparser");
         //proc.loadSentences();
         //System.out.println(proc.getIdxMatches("samuel student".split("\\s+"),"samuel louvan is the most stupid phd samuel student".split("\\s+")));
     }

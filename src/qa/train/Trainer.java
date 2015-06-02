@@ -94,6 +94,7 @@ public class Trainer {
         }
 
     }
+
     public void predict(String dirName, String testFileName, String modelFileName, String predictionFileName) {
         predictArgs[3] = dirName + testFileName; // -i
         predictArgs[5] = dirName + predictionFileName; // -o
@@ -206,9 +207,9 @@ public class Trainer {
             }
             writer.close();
             String fileName = testFiles[i].getName();
-            int fold = Integer.parseInt(fileName.substring(fileName.lastIndexOf(".")+1));
-            String processName = fileName.substring(0,fileName.indexOf("."));
-            train(dirName, testFiles[i].getName().replace("test", "train.combined"),  processName +"."+modelName+ ".cv." + fold);
+            int fold = Integer.parseInt(fileName.substring(fileName.lastIndexOf(".") + 1));
+            String processName = fileName.substring(0, fileName.indexOf("."));
+            train(dirName, testFiles[i].getName().replace("test", "train.combined"), processName + "." + modelName + ".cv." + fold);
         }
     }
 
@@ -230,10 +231,10 @@ public class Trainer {
     public static void main(String[] args) throws IOException {
         // For PER PROCESS MODEL
         GroupProcess proc = new GroupProcess();
-         proc.generateIndividualProcessesFile("./data/all_processes_23_may_2015.tsv", "./data/processes_23_may_2015/");
-         Trainer trainer = new Trainer();
-         //trainer.crossValidationPerProcessTrain(GlobalVariable.PROJECT_DIR + "/data/processes_23_may_2015/", "perprocess");
-         trainer.crossValidationPerProcessPredict(GlobalVariable.PROJECT_DIR + "/data/processes_23_may_2015/", "perprocess");
+        proc.generateIndividualProcessesFile("./data/all_processes_23_may_2015.tsv", "./data/processes_23_may_2015/");
+        Trainer trainer = new Trainer();
+        //trainer.crossValidationPerProcessTrain(GlobalVariable.PROJECT_DIR + "/data/processes_23_may_2015/", "perprocess");
+        trainer.crossValidationPerProcessPredict(GlobalVariable.PROJECT_DIR + "/data/processes_23_may_2015/", "perprocess");
 
         // For COMBINED MODEL
         // Assume everything like test, train tsv for PER PROCESS exist
