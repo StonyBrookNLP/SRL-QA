@@ -7,6 +7,7 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.ProcessFrameUtil;
+import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -63,13 +64,14 @@ public class SRLCombinedModelExp {
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException {
-        ArrayList<String> testFileName = new ArrayList<String>();
-        ArrayList<String> trainingModelFileName = new ArrayList<String>();
+        ArrayList<String> testFilePath = new ArrayList<String>();
+        ArrayList<String> trainingModelFilePath = new ArrayList<String>();
         for (int i = 0; i < 5; i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
             int fold = processFold.get(normalizedProcessName);
             ProcessFrameUtil.toClearParserFormat(testFrame, outDirName + "/" + normalizedProcessName + ".test.cv." + fold);  // out to <process_frame_>.test.cv.<fold>
+            testFilePath.add(outDirName + "/" + normalizedProcessName + ".test.cv." + fold);
             processFold.put(normalizedProcessName, fold + 1);
 
             // Get the testing data
@@ -80,6 +82,7 @@ public class SRLCombinedModelExp {
                 }
             }
             String trainingFileName = outDirName + "/" + normalizedProcessName + ".train.combined.cv." + fold;
+            trainingModelFilePath.add(outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold);
             String modelName = outDirName + "/" + normalizedProcessName + ".combinedmodel.cv." + fold;
             ProcessFrameUtil.toClearParserFormat(trainingFrames, trainingFileName);
 
@@ -104,8 +107,11 @@ public class SRLCombinedModelExp {
             // Perform prediction
         }
         Thread.sleep(10000);
-        for (int i = 0; i < testFileName.size(); i++) {
-            
+        for (int i = 0; i < testFilePath.size(); i++) {
+            ClearParserUtil.PREDICT_ARGS[3] = testFilePath.get(i);
+            ClearParserUtil.PREDICT_ARGS[5] = testFilePath.get(i).replace(".test.", ".combined.predict.");
+            ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
+            new SRLPredict(ClearParserUtil.PREDICT_ARGS);
         }
         // Prediction time
     }
