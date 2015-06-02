@@ -7,11 +7,17 @@ package qa.experiment;
 
 import Util.ClearParserUtil;
 import Util.ProcessFrameUtil;
+import Util.StdUtil;
+import Util.StringUtil;
 import clear.engine.SRLPredict;
 import clear.engine.SRLTrain;
+import clear.util.FileUtil;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -37,9 +43,12 @@ public class SRLCombinedModelExp {
 
     private ArrayList<ProcessFrame> frameArr;
     private HashMap<String, Integer> processFold;
+    ArrayList<String> testFilePath;
+    ArrayList<String> trainingModelFilePath;
 
     public SRLCombinedModelExp() throws FileNotFoundException {
-
+        trainingModelFilePath = new ArrayList<String>();
+        testFilePath = new ArrayList<String>();
         processFold = new HashMap<String, Integer>();
     }
 
@@ -64,9 +73,9 @@ public class SRLCombinedModelExp {
     }
 
     public void trainAndPredict() throws FileNotFoundException, IOException, InterruptedException {
-        ArrayList<String> testFilePath = new ArrayList<String>();
-        ArrayList<String> trainingModelFilePath = new ArrayList<String>();
-        for (int i = 0; i < 5; i++) {
+        testFilePath.clear();
+        trainingModelFilePath.clear();
+        for (int i = 0; i < frameArr.size(); i++) {
             ProcessFrame testFrame = frameArr.get(i);
             String normalizedProcessName = ProcessFrameUtil.normalizeProcessName(testFrame.getProcessName());
             int fold = processFold.get(normalizedProcessName);
@@ -113,6 +122,7 @@ public class SRLCombinedModelExp {
             ClearParserUtil.PREDICT_ARGS[7] = trainingModelFilePath.get(i);
             new SRLPredict(ClearParserUtil.PREDICT_ARGS);
         }
+
         // Prediction time
     }
 
@@ -120,10 +130,39 @@ public class SRLCombinedModelExp {
      * Compute the precision, recall, F1 of the predictions by executing
      * combine.py and evaluate.py
      */
-    /*public void evaluate()
-     {
-        
-     }*/
+    public void evaluate() throws FileNotFoundException, IOException {
+        System.out.println("Evaluating");
+        PrintWriter gs_writer = new PrintWriter("gs.txt");
+        PrintWriter srl_writer = new PrintWriter("srl.txt");
+        for (int i = 0; i < testFilePath.size(); i++) {
+            String[] gsTxt = FileUtil.readLinesFromFile(testFilePath.get(i));
+            String[] srlTxt = FileUtil.readLinesFromFile(testFilePath.get(i).replace(".test.", ".combined.predict."));
+            gs_writer.print(StringUtil.toString(gsTxt));
+            srl_writer.print(StringUtil.toString(srlTxt));
+        }
+        gs_writer.close();
+        srl_writer.close();
+
+        // create runtime to execute external command
+        String pythonScriptPath = "./script/evaluate.py";
+        String[] cmd = new String[4];
+        cmd[0] = "python";
+        cmd[1] = pythonScriptPath;
+        cmd[2] = "gs.txt";
+        cmd[3] = "srl.txt";
+        Runtime rt = Runtime.getRuntime();
+        Process pr = rt.exec(cmd);
+
+// retrieve output from python script
+        BufferedReader bfr = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+        String line = "";
+        while ((line = bfr.readLine()) != null) {
+// display each output line form python script
+            System.out.println(line);
+        }
+        StdUtil.printError(pr);
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
         SRLCombinedModelExp srlExp = new SRLCombinedModelExp();
         CmdLineParser cmd = new CmdLineParser(srlExp);
@@ -132,6 +171,8 @@ public class SRLCombinedModelExp {
             cmd.parseArgument(args);
             srlExp.init();
             srlExp.trainAndPredict();
+            Thread.sleep(5000);
+            srlExp.evaluate();
         } catch (CmdLineException e) {
             System.err.println(e.getMessage());
             cmd.printUsage(System.err);
